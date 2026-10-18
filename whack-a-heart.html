@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Whack-a-Heart · Subway Games</title>
+<link rel="stylesheet" href="colors_and_type.css">
+<style>
+*{box-sizing:border-box;}
+html,body{margin:0;min-height:100%;font-family:var(--pd-font-body,'Quicksand',sans-serif);color:#0C5A48;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;}
+a{color:#B83A32;}a:hover{color:#0C5A48;}
+body{background:#FFFBF2;min-height:100vh;display:grid;place-items:center;padding:14px;}
+.frame{position:relative;width:min(100%,760px,max(300px,calc(100vh - 230px)));border-radius:44px;padding:26px;border:5px solid #0C5A48;box-shadow:0 12px 0 #0C5A48;
+background-color:#B83A32;background-image:radial-gradient(circle,#FFD86B 0 6px,transparent 7px),radial-gradient(circle,rgba(255,255,255,.45) 0 5px,transparent 6px);background-size:56px 56px;background-position:0 0,28px 28px;}
+.inner{position:relative;container-type:inline-size;background-color:#FFFCF0;background-image:linear-gradient(90deg,rgba(143,211,244,.45) 0 2px,transparent 2px),linear-gradient(0deg,rgba(143,211,244,.45) 0 2px,transparent 2px);background-size:48px 24px;border:5px solid #0C5A48;border-radius:28px;padding:18px 20px 24px;overflow:hidden;}
+.top{display:flex;flex-direction:column;align-items:center;gap:clamp(6px,1.6cqw,10px);}
+.top h1{white-space:nowrap;font-family:var(--pd-font-display,'Bowlby One SC',sans-serif);font-weight:400;font-size:clamp(16px,6.4cqw,40px);margin:0;line-height:1;color:#E9524A;text-shadow:2px 2px 0 #0C5A48;}
+.stats{display:flex;gap:6px;flex:none;}
+.pill{font-family:var(--pd-font-display,'Bowlby One SC',sans-serif);font-size:clamp(12px,3.8cqw,26px);line-height:1;background:#fff;border:3px solid #0C5A48;border-radius:999px;padding:clamp(5px,1.4cqw,9px) clamp(8px,2.4cqw,16px);box-shadow:0 4px 0 #0C5A48;white-space:nowrap;}
+.pill.score{background:#FFD86B;}
+.pill.time.low{background:#FFB3C6;animation:tick 1s infinite;}
+@keyframes tick{50%{transform:scale(1.08);}}
+.bar{height:14px;border:4px solid #0C5A48;border-radius:999px;background:#fff;margin:14px 0 6px;overflow:hidden;}
+.bar i{display:block;height:100%;width:100%;background-color:#FFD86B;background-image:radial-gradient(circle,#0C5A48 0 3px,transparent 4px);background-size:14px 10px;transition:width .25s linear;}
+.combo{height:clamp(20px,5cqw,30px);text-align:center;font-family:var(--pd-font-display,'Bowlby One SC',sans-serif);font-size:clamp(14px,4cqw,22px);color:#B83A32;}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(10px,3vw,26px);margin-top:4px;}
+.hole{position:relative;aspect-ratio:1/1;cursor:pointer;touch-action:manipulation;}
+.pit{position:absolute;left:4%;right:4%;bottom:4%;height:34%;border-radius:50%;background:radial-gradient(ellipse at 50% 35%,#2F6F5E 0%,#0C5A48 70%);border:4px solid #0C5A48;box-shadow:0 6px 0 #E9524A;}
+.mask{position:absolute;left:0;right:0;top:0;bottom:21%;overflow:hidden;border-radius:0 0 50% 50% / 0 0 18% 18%;}
+.dot{position:absolute;z-index:1;left:14%;width:72%;aspect-ratio:1/1;bottom:-160%;transition:bottom .32s cubic-bezier(.3,1.6,.6,1);}
+.dot.up{bottom:6%;}
+.hrt{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+.hrt .h{fill:var(--c,#E9524A);stroke:#0C5A48;stroke-width:7;stroke-linejoin:round;}
+.hrt .shine{fill:rgba(255,255,255,.6);}
+.hrt .ray{stroke:#0C5A48;stroke-width:7;stroke-linecap:round;}
+.hrt .ray.more{display:none;}
+.dot.gold .hrt .ray.more{display:inline;}
+.sponge{display:none;position:absolute;left:12%;right:12%;top:20%;bottom:6%;border-radius:18%;background-color:#8FD3F4;background-image:radial-gradient(circle,rgba(12,90,72,.25) 0 6%,transparent 7%);background-size:34% 34%;border:5px solid #0C5A48;}
+.dot.bad .hrt{display:none;}.dot.bad .sponge{display:block;}
+.sponge .eye{position:absolute;top:34%;width:13%;height:20%;background:#fff;border:3px solid #0C5A48;border-radius:50%;}
+.sponge .eye::after{content:"";position:absolute;left:25%;top:30%;width:50%;height:50%;background:#0C5A48;border-radius:50%;}
+.sponge .eye.l{left:26%;}.sponge .eye.r{right:26%;}
+.sponge .brow{position:absolute;top:22%;width:22%;height:6%;background:#0C5A48;border-radius:4px;}
+.sponge .brow.l{left:20%;transform:rotate(20deg);}.sponge .brow.r{right:20%;transform:rotate(-20deg);}
+.sponge .mouth{position:absolute;left:34%;right:34%;top:68%;height:14%;border-top:5px solid #0C5A48;border-radius:999px 999px 0 0;}
+.dot.hit{transition:transform .22s,opacity .22s;transform:scale(1.35,.45) translateY(40%);opacity:0;}
+.dot.gold::before{z-index:3;content:"+5";position:absolute;top:-6%;right:-14%;font-family:var(--pd-font-display,'Bowlby One SC',sans-serif);font-size:clamp(14px,3vw,22px);background:#FFD86B;border:3px solid #0C5A48;border-radius:999px;padding:2px 8px;}
+.float{position:absolute;left:50%;top:10%;transform:translateX(-50%);font-family:var(--pd-font-display,'Bowlby One SC',sans-serif);font-size:clamp(20px,4vw,32px);color:#fff;-webkit-text-stroke:2px #0C5A48;pointer-events:none;animation:up .7s forwards;z-index:3;}
+@keyframes up{to{transform:translate(-50%,-80%);opacity:0;}}
+.splat{position:absolute;left:50%;top:50%;width:12px;height:5px;border-radius:4px;pointer-events:none;z-index:2;animation:splat .5s forwards;}
+@keyframes splat{to{transform:translate(var(--dx),var(--dy)) rotate(var(--a)) scale(.4);opacity:0;}}
+.hint{text-align:center;font-weight:700;font-size:clamp(12px,3.4cqw,19px);margin:clamp(8px,2cqw,16px) 0 0;color:#2F6F5E;}
+.overlay{position:absolute;inset:0;display:grid;place-items:center;z-index:5;background:rgba(255,251,242,.95);padding:12px;border-radius:24px;overflow:auto;}
+.overlay[hidden]{display:none;}
+.card{text-align:center;}
+.card h2{font-family:var(--pd-font-display,'Bowlby One SC',sans-serif);font-weight:400;font-size:clamp(26px,9cqw,58px);margin:0 0 10px;color:#E9524A;text-shadow:3px 3px 0 #0C5A48;line-height:1.05;}
+.card p{font-size:clamp(15px,4cqw,23px);font-weight:700;margin:0 0 clamp(10px,3cqw,22px);line-height:1.35;}
+.card .big{font-family:var(--pd-font-display,'Bowlby One SC',sans-serif);font-size:clamp(22px,6.5cqw,40px);margin-bottom:6px;}
+.legend{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;font-weight:700;font-size:clamp(14px,3.4cqw,18px);margin-bottom:clamp(10px,3cqw,22px);}
+.legend span{display:flex;align-items:center;gap:6px;}
+.legend b{display:inline-block;width:22px;height:22px;border-radius:50%;border:3px solid #0C5A48;}
+.btn{font-family:var(--pd-font-display,'Bowlby One SC',sans-serif);font-size:clamp(18px,5cqw,32px);text-transform:uppercase;color:#0C5A48;background:#84E6A4;border:5px solid #0C5A48;border-radius:999px;padding:clamp(8px,2.4cqw,14px) clamp(24px,7cqw,42px);box-shadow:0 8px 0 #0C5A48;cursor:pointer;transition:transform .1s,box-shadow .1s;}
+.btn:hover{transform:translateY(-2px);}
+.btn:active{transform:translateY(6px);box-shadow:0 2px 0 #0C5A48;}
+.shake{animation:shake .3s;}
+@keyframes shake{25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+</style>
+</head>
+<body>
+<div class="frame">
+<div class="inner" id="inner">
+<div class="top"><h1>Whack-a-Heart</h1><div class="stats"><span class="pill time" id="time">⏱ 60</span><span class="pill score" id="score">⭐ 0</span></div></div>
+<div class="bar"><i id="bar"></i></div>
+<div class="combo" id="combo"></div>
+<div class="grid" id="grid"></div>
+<p class="hint">Tap the shining hearts · golden = +5 · don't tap the grumpy sponge!</p>
+<div class="overlay" id="start"><div class="card"><h2>Whack-a-<br>Heart</h2><p>Shining hearts are popping up all over the subway wall — tap them to collect the love! ❤️✨</p>
+<div class="legend"><span><b style="background:#E9524A;"></b>heart +1</span><span><b style="background:#FFD86B;"></b>golden heart +5</span><span><b style="background:#8FD3F4;"></b>sponge — don't tap, it wipes the art away!</span></div>
+<button class="btn" id="playBtn" type="button">Play!</button></div></div>
+<div class="overlay" id="over" hidden><div class="card"><h2>Time's Up!</h2><p class="big" id="final">Score: 0</p><p id="best"></p><button class="btn" id="againBtn" type="button">Play Again</button></div></div>
+</div>
+</div>
+<script>
+(function(){
+var COLS=['#E9524A','#FFB8C6','#C9B6FF','#E9524A','#84E6A4'],FX=['#E9524A','#FFD86B','#FFB8C6','#8FD3F4','#84E6A4','#0C5A48'];
+var grid=document.getElementById('grid'),scoreEl=document.getElementById('score'),timeEl=document.getElementById('time'),bar=document.getElementById('bar'),comboEl=document.getElementById('combo'),inner=document.getElementById('inner');
+var holes=[];var G={running:false,score:0,left:60,combo:0,spawnT:0};
+function ray(a,cls){var r=a*Math.PI/180;return '<line class="ray'+(cls||'')+'" x1="'+(Math.cos(r)*50).toFixed(1)+'" y1="'+(Math.sin(r)*50-4).toFixed(1)+'" x2="'+(Math.cos(r)*62).toFixed(1)+'" y2="'+(Math.sin(r)*62-4).toFixed(1)+'"></line>';}
+var rays=[-150,-120,-90,-60,-30].map(function(a){return ray(a);}).join('')+[-180,0,150,30].map(function(a){return ray(a,' more');}).join('');
+var heartSvg='<svg class="hrt" viewBox="-66 -70 132 132" aria-hidden="true">'+rays+'<path class="h" d="M0 40 C-60 2 -40 -48 0 -18 C40 -48 60 2 0 40Z"></path><ellipse class="shine" cx="-20" cy="-14" rx="6" ry="11" transform="rotate(30 -20 -14)"></ellipse></svg>';
+var sponge='<div class="sponge"><div class="brow l"></div><div class="brow r"></div><div class="eye l"></div><div class="eye r"></div><div class="mouth"></div></div>';
+for(var i=0;i<9;i++){var h=document.createElement('div');h.className='hole';h.innerHTML='<div class="pit"></div><div class="mask"><div class="dot">'+heartSvg+sponge+'</div></div>';grid.appendChild(h);
+holes.push({el:h,dot:h.querySelector('.dot'),busy:false,type:null,timer:0});
+(function(idx){h.addEventListener('pointerdown',function(e){e.preventDefault();whack(idx,e);});})(i);}
+/* sound */
+var AC=null;function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC;}
+function tone(f1,f2,dur,type,vol,delay){var a=ac();if(!a)return;var t=a.currentTime+(delay||0);var o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f1,t);o.frequency.exponentialRampToValueAtTime(f2,t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol||.2,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+dur+.02);}
+function sPop(){tone(900,300,.12,'sine',.22);tone(1500,700,.05,'square',.04);}
+function sGold(){[784,988,1175,1568].forEach(function(f,i){tone(f,f*1.01,.12,'triangle',.15,i*.06);});}
+function sBad(){tone(180,80,.3,'sawtooth',.12);}
+function sEnd(){[659,784,988,1319].forEach(function(f,i){tone(f,f,.2,'triangle',.16,i*.14);});}
+function show(idx,type,dur){var H=holes[idx];H.busy=true;H.type=type;H.dot.className='dot'+(type==='gold'?' gold':type==='spiky'?' bad':'');
+H.dot.style.setProperty('--c',type==='gold'?'#FFD86B':COLS[Math.random()*COLS.length|0]);
+void H.dot.offsetWidth;H.dot.classList.add('up');H.timer=setTimeout(function(){hide(idx);},dur);}
+function hide(idx){var H=holes[idx];H.dot.classList.remove('up');clearTimeout(H.timer);setTimeout(function(){H.busy=false;H.type=null;},170);}
+function fx(idx,text,colour){var h=holes[idx].el;var f=document.createElement('div');f.className='float';f.textContent=text;f.style.color=colour;h.appendChild(f);setTimeout(function(){f.remove();},700);
+for(var k=0;k<8;k++){var s=document.createElement('i');s.className='splat';var a=k/8*Math.PI*2;s.style.setProperty('--dx',Math.cos(a)*60+'px');s.style.setProperty('--dy',Math.sin(a)*60+'px');s.style.setProperty('--a',(a*180/Math.PI)+'deg');s.style.transform='rotate('+(a*180/Math.PI)+'deg)';s.style.background=FX[k%FX.length];h.appendChild(s);(function(n){setTimeout(function(){n.remove();},500);})(s);}}
+function whack(idx){if(!G.running)return;var H=holes[idx];if(!H.type||!H.dot.classList.contains('up'))return;var t=H.type;H.type=null;clearTimeout(H.timer);
+H.dot.classList.add('hit');setTimeout(function(){H.dot.className='dot';H.busy=false;},230);
+if(t==='spiky'){sBad();G.score=Math.max(0,G.score-1);G.combo=0;comboEl.textContent='SWOOSH! The sponge wiped it! 🧽';inner.classList.remove('shake');void inner.offsetWidth;inner.classList.add('shake');fx(idx,'-1','#B83A32');}
+else{var pts=t==='gold'?5:1;G.combo++;if(G.combo>0&&G.combo%5===0){pts+=2;comboEl.textContent='🔥 Combo x'+G.combo+'! +2 bonus';}else{comboEl.textContent=G.combo>1?'Combo x'+G.combo:'';}
+G.score+=pts;t==='gold'?sGold():sPop();fx(idx,'+'+pts,t==='gold'?'#FFD86B':'#fff');}
+scoreEl.textContent='⭐ '+G.score;}
+function spawnWave(){var progress=1-G.left/60;var free=holes.map(function(h,i){return h.busy?-1:i;}).filter(function(i){return i>=0;});if(!free.length)return;
+var count=Math.random()<(.05+progress*.2)?2:1;
+for(var c=0;c<count&&free.length;c++){var j=free.splice(Math.random()*free.length|0,1)[0];var r=Math.random();var type=r<.1?'gold':r<.24?'spiky':'normal';
+var dur=(2300-progress*500)*(type==='gold'?.75:1);show(j,type,dur);}}
+var last=0,secT=0;
+function loop(now){if(!G.running)return;var dt=last?(now-last)/1000:0;last=now;
+G.left-=dt;if(G.left<=0){G.left=0;end();}
+var sec=Math.ceil(G.left);if(sec!==secT){secT=sec;timeEl.textContent='⏱ '+sec;timeEl.classList.toggle('low',sec<=10);}
+bar.style.width=(G.left/60*100)+'%';
+G.spawnT-=dt;if(G.spawnT<=0){spawnWave();var progress=1-G.left/60;G.spawnT=(1.7-progress*.5)*(.8+Math.random()*.4);}
+if(G.running)requestAnimationFrame(loop);}
+function start(){ac();G.running=true;G.score=0;G.left=60;G.combo=0;G.spawnT=.5;last=0;secT=0;scoreEl.textContent='⭐ 0';comboEl.textContent='';
+holes.forEach(function(h){clearTimeout(h.timer);h.dot.className='dot';h.busy=false;h.type=null;});
+document.getElementById('start').hidden=true;document.getElementById('over').hidden=true;requestAnimationFrame(loop);}
+function end(){G.running=false;holes.forEach(function(h,i){hide(i);});sEnd();
+var best=Math.max(G.score,+(localStorage.getItem('whackHeartBest')||0));localStorage.setItem('whackHeartBest',best);
+document.getElementById('final').textContent='Score: '+G.score;document.getElementById('best').textContent=G.score>=best&&G.score>0?'🏆 New best score!':'Best: '+best;
+setTimeout(function(){document.getElementById('over').hidden=false;},400);}
+document.getElementById('playBtn').addEventListener('click',start);document.getElementById('againBtn').addEventListener('click',start);
+})();
+</script>
+</body>
+</html>
